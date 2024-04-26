@@ -1,4 +1,6 @@
+use std::fs;
 use std::ops::Deref;
+use std::os::unix::fs::MetadataExt;
 
 use color_eyre::eyre::{bail, Context};
 use color_eyre::Result;
@@ -65,6 +67,12 @@ impl OsRebuildArgs {
             }
 
             update_args.push(&self.common.flakeref);
+
+            // check if flakeref is owned by root so we can add sudo to the front
+            let flake_metadata = fs::metadata(&self.common.flakeref).context("Failed to get metadata of flake")?;
+            if flake_metadata.uid() == 0 {
+                update_args.insert(0, "sudo");
+            }
 
             debug!("nix_version: {:?}", nix_version);
             debug!("update_args: {:?}", update_args);
