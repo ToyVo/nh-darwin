@@ -6,7 +6,7 @@ in {
   meta.maintainers = with lib.maintainers; [ johnrtitor ];
 
   options.programs.nh = {
-    enable = lib.mkEnableOption "nh-darwin, yet another Nix CLI helper. Works on NixOS, NixDarwin, and HomeManager Standalone";
+    enable = lib.mkEnableOption "nh_darwin, yet another Nix CLI helper. Works on NixOS, NixDarwin, and HomeManager Standalone";
 
     package = lib.mkPackageOption pkgs "nh" { } // {
       default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
@@ -18,7 +18,7 @@ in {
       description = ''
         The path that will be used for the `FLAKE` environment variable.
 
-        `FLAKE` is used by nh-darwin as the default flake for performing actions, like `nh-darwin os switch`.
+        `FLAKE` is used by nh_darwin as the default flake for performing actions, like `nh_darwin os switch`.
       '';
     };
   };

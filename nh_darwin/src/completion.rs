@@ -3,7 +3,7 @@ use clap_complete::generate;
 use color_eyre::Result;
 use tracing::instrument;
 
-const NH_NAME: &str = env!("CARGO_BIN_NAME");
+const NH_NAME: &str = env!("CARGO_PKG_NAME");
 
 impl NHRunnable for interface::CompletionArgs {
     #[instrument(ret, level = "trace")]
