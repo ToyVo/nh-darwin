@@ -8,7 +8,6 @@
     { self
     , nixpkgs
     , crate2nix
-    ,
     }:
     let
       forAllSystems = function:
@@ -25,56 +24,17 @@
             }));
 
       lib = nixpkgs.lib;
+      rev = self.shortRev or self.dirtyShortRev or "dirty";
     in
     {
       overlays.default = final: prev: {
         nh_darwin = self.packages.${final.stdenv.hostPlatform.system}.nh_darwin;
       };
 
-      packages = forAllSystems (pkgs:
-        let
-          generated = crate2nix.tools.${pkgs.stdenv.hostPlatform.system}.generatedCargoNix {
-            name = "nh_darwin";
-            src = ./.;
+      packages = forAllSystems (pkgs: rec {
+          nh_darwin = pkgs.callPackage ./package.nix {
+            inherit rev;
           };
-          crates = pkgs.callPackage "${generated}/default.nix" {
-            buildRustCrateForPkgs = pkgs: pkgs.buildRustCrate.override {
-              defaultCrateOverrides = pkgs.defaultCrateOverrides // {
-                nh_darwin = attrs: {
-                  buildInputs = with pkgs.darwin.apple_sdk.frameworks; lib.optionals (pkgs.stdenv.isDarwin) [
-                    SystemConfiguration
-                  ];
-                  nativeBuildInputs = with pkgs; [
-                    installShellFiles
-                    makeBinaryWrapper
-                  ];
-                  preFixup = ''
-                    mkdir completions
-                    $out/bin/nh_darwin completions --shell bash > completions/nh_darwin.bash
-                    $out/bin/nh_darwin completions --shell zsh > completions/nh_darwin.zsh
-                    $out/bin/nh_darwin completions --shell fish > completions/nh_darwin.fish
-                    installShellCompletion completions/*
-                  '';
-
-                  postFixup = ''
-                    wrapProgram $out/bin/nh_darwin \
-                      --prefix PATH : ${lib.makeBinPath [pkgs.nvd pkgs.nix-output-monitor]}
-                  '';
-
-                  meta = {
-                    description = "Yet another nix cli helper. Works on NixOS, NixDarwin, and HomeManager Standalone";
-                    homepage = "https://github.com/ToyVo/nh_darwin";
-                    license = lib.licenses.eupl12;
-                    mainProgram = "nh_darwin";
-                    maintainers = with lib.maintainers; [drupol viperML ToyVo];
-                  };
-                };
-              };
-            };
-          };
-        in
-        rec {
-          nh_darwin = crates.workspaceMembers.nh_darwin.build;
           default = nh_darwin;
         });
 

@@ -8,9 +8,7 @@ in {
   options.programs.nh = {
     enable = lib.mkEnableOption "nh_darwin, yet another Nix CLI helper. Works on NixOS, NixDarwin, and HomeManager Standalone";
 
-    package = lib.mkPackageOption pkgs "nh" { } // {
-      default = self.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    };
+    package = lib.mkPackageOption pkgs "nh_darwin" { };
 
     flake = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
@@ -24,6 +22,8 @@ in {
   };
 
   config = {
+    nixpkgs.overlays = [ self.overlays.default ];
+
     assertions = [{
       assertion = (cfg.flake != null) -> !(lib.hasSuffix ".nix" cfg.flake);
       message = "nh.flake must be a directory, not a nix file";
