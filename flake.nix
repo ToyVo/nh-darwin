@@ -106,30 +106,26 @@
               };
             };
           };
-          overlays = [
-            (import rust-overlay)
-            (self: super: assert !(super ? rust-toolchain); rec {
-              rust-toolchain = (super.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml).override {
-                extensions = [ "rust-src" "rust-std" "rust-analyzer" "rustfmt" "clippy" ];
-              };
-
-              # buildRustCrate/crate2nix depend on this.
-              rustc = rust-toolchain;
-              cargo = rust-toolchain;
-              rustfmt = rust-toolchain;
-              clippy = rust-toolchain;
-              rust-analyzer = rust-toolchain;
-            })
-          ];
-          overlayPkgs = import nixpkgs { inherit system overlays; config = { }; };
         in
         rec {
-          _module.args.pkgs = overlayPkgs;
+          _module.args.pkgs = import nixpkgs {
+            inherit system;
+            overlays = [
+              (import rust-overlay)
+              (final: prev: assert !(prev ? rust-toolchain); rec {
+                rust-toolchain = (prev.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml).override {
+                  extensions = [ "rust-src" "rust-std" "rust-analyzer" "rustfmt" "clippy" ];
+                };
 
-          checks = {
-            rustnix = cargoNix.workspaceMembers.rustnix.build.override {
-              runTests = true;
-            };
+                # buildRustCrate/crate2nix depend on this.
+                rustc = rust-toolchain;
+                cargo = rust-toolchain;
+                rustfmt = rust-toolchain;
+                clippy = rust-toolchain;
+                rust-analyzer = rust-toolchain;
+              })
+            ];
+            config = { };
           };
 
           overlayAttrs = {
@@ -137,7 +133,6 @@
           };
 
           packages = {
-            rustnix = cargoNix.workspaceMembers.rustnix.build;
             nh_darwin = cargoNix.workspaceMembers.nh_darwin.build;
             default = packages.nh_darwin;
 
