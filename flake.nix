@@ -32,6 +32,18 @@
     , crate2nix
     , devshell
     }: flake-parts.lib.mkFlake { inherit inputs; } {
+      flake = {
+        nixosModules.default = import ./module.nix self;
+        # use this module before this pr is merged https://github.com/LnL7/nix-darwin/pull/942
+        nixDarwinModules.prebuiltin = import ./darwin-module.nix self;
+        # use this module after that pr is merged
+        nixDarwinModules.default = import ./module.nix self;
+        # use this module before this pr is merged https://github.com/nix-community/home-manager/pull/5304
+        homeManagerModules.prebuiltin = import ./home-manager-module.nix self;
+        # use this module after that pr is merged
+        homeManagerModules.default = import ./module.nix self;
+      };
+
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -41,9 +53,10 @@
 
       imports = [
         devshell.flakeModule
+        flake-parts.flakeModules.easyOverlay
       ];
 
-      perSystem = { system, pkgs, lib, inputs', ... }:
+      perSystem = { system, pkgs, lib, inputs', config, ... }:
         let
           # If you dislike IFD, you can also generate it with `crate2nix generate`
           # on each dependency change and import it here with `import ./Cargo.nix`.
@@ -117,6 +130,10 @@
             rustnix = cargoNix.workspaceMembers.rustnix.build.override {
               runTests = true;
             };
+          };
+
+          overlayAttrs = {
+            inherit (config.packages) nh_darwin;
           };
 
           packages = {
