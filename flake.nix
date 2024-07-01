@@ -67,10 +67,10 @@
           cargoNix = pkgs.callPackage "${generatedCargoNix}/default.nix" {
             buildRustCrateForPkgs = pkgs: pkgs.buildRustCrate.override {
               defaultCrateOverrides = pkgs.defaultCrateOverrides // {
-                nh_darwin = attrs: {
+                nh_darwin = attrs: rec {
                   postInstall = ''
                     wrapProgram $out/bin/nh_darwin \
-                      --prefix PATH : ${lib.makeBinPath [pkgs.nvd pkgs.nix-output-monitor]}
+                      --prefix PATH : ${lib.makeBinPath buildInputs}
                     mkdir completions
                     $out/bin/nh_darwin completions --shell bash > completions/nh_darwin.bash
                     $out/bin/nh_darwin completions --shell zsh > completions/nh_darwin.zsh
