@@ -68,19 +68,15 @@
             buildRustCrateForPkgs = pkgs: pkgs.buildRustCrate.override {
               defaultCrateOverrides = pkgs.defaultCrateOverrides // {
                 nh_darwin = attrs: {
-                  preFixup = ''
+                  postInstall = ''
+                    wrapProgram $out/bin/nh_darwin \
+                      --prefix PATH : ${lib.makeBinPath [pkgs.nvd pkgs.nix-output-monitor]}
                     mkdir completions
                     $out/bin/nh_darwin completions --shell bash > completions/nh_darwin.bash
                     $out/bin/nh_darwin completions --shell zsh > completions/nh_darwin.zsh
                     $out/bin/nh_darwin completions --shell fish > completions/nh_darwin.fish
-
                     installShellCompletion completions/*
                   '';
-
-                  # postFixup = ''
-                  #   wrapProgram $out/bin/nh_darwin \
-                  #     --prefix PATH : ${lib.makeBinPath [pkgs.nvd pkgs.nix-output-monitor]}
-                  # '';
 
                   buildInputs = with pkgs; [
                     nvd
